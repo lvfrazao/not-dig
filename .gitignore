@@ -7,4 +7,5 @@
 # Unignore all dirs
 !*/
 
+!makefile
 .vscode/

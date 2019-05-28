@@ -2,7 +2,7 @@
 
 ## Victor's DNS Implementation
 
-This project implements a stub resolver client that is able to query either a recursive or authoritative.
+This project implements a stub resolver client that is able to query either a recursive or authoritative DNS server.
 
 ## What is supported?
 
