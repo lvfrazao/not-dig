@@ -20,10 +20,22 @@ void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote
 {
     if (DEBUG)
         print_packet(packet, msg_size);
-    char *qname = decode_domain_name((uint8_t *)msg->quest[0]->QNAME);
-    char *qtype = qtype_to_str(msg->quest[0]->QTYPE);
+
     char *opcode = opcode_to_str(msg->head->opcode);
     char *status = rcode_to_str(msg->head->RCODE);
+    char *qname;
+    char *qtype;
+    if (msg->head->QDCount)
+    {
+        qname = decode_domain_name((uint8_t *)msg->quest[0]->QNAME);
+        qtype = qtype_to_str(msg->quest[0]->QTYPE);
+    }
+    else
+    {
+        qname = "N/A";
+        qtype = "N/A";
+    }
+
     printf("; <<>> Not DiG %s <<>> %s %s\n", VERSION, qname, qtype);
     printf(";; global options: +cmd\n");
     printf(";; Got answer:\n");
@@ -49,7 +61,8 @@ void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote
 
     printf("\n");
 
-    printf(";; QUESTION SECTION:\n");
+    if (msg->head->QDCount)
+        printf(";; QUESTION SECTION:\n");
     for (int i = 0; i < msg->head->QDCount; i++)
     {
         printf("%s\t\tIN\t\t%s\n", decode_domain_name((uint8_t *)msg->quest[i]->QNAME), qtype_to_str(msg->quest[i]->QTYPE));
