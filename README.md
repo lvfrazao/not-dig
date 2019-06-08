@@ -9,7 +9,7 @@ This project implements a stub resolver client that is able to query either a re
 1. Specifying the server to query
 2. Specifying the port to send the query
 3. Any domain name and any RRTYPE can be encoded into a query
-4. The following RRTYPEs can be decoded: A, NS, CNAME, SOA, PTR, HINFO, MX, TXT, AFSDB, AAAA, SRV, NAPTR, CERT
+4. The following RRTYPEs can be decoded: A, NS, CNAME, SOA, PTR, HINFO, MX, TXT, AFSDB, AAAA, SRV, NAPTR, CERT, DNAME
 5. UDP retry
 
 ## What isn't supported?

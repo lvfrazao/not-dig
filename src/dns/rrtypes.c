@@ -25,6 +25,7 @@ char *AAAA_record(uint8_t *data);
 char *SRV_record(uint8_t *data, uint16_t data_len, uint8_t *packet);
 char *NAPTR_record(uint8_t *data, uint16_t data_len);
 char *CERT_record(uint8_t *data, uint16_t data_len);
+char *DNAME_record(uint8_t *data, uint16_t data_len, uint8_t *packet);
 
 char *rdata_to_str(RRFORMAT *res_record, uint8_t *packet)
 {
@@ -70,6 +71,9 @@ char *rdata_to_str(RRFORMAT *res_record, uint8_t *packet)
         break;
     case (CERT):
         return CERT_record(res_record->RDATA, res_record->RDLENGTH);
+        break;
+    case (DNAME):
+        return DNAME_record(res_record->RDATA, res_record->RDLENGTH, packet);
         break;
     default:;
         char *hex_stream = malloc(sizeof(char) * res_record->RDLENGTH * 3 + 1); // 3 chars per hex byte
@@ -781,6 +785,32 @@ char *CERT_record(uint8_t *data, uint16_t data_len)
 
     free(certificate);
     return cert_str;
+}
+
+// 38
+char *A6_record()
+{
+    // Obsolete
+    return NULL;
+}
+
+// 39
+char *DNAME_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
+{
+    /*
+    Defined in RFC 6672
+    Format:
+    <owner> <ttl> <class> DNAME <target>
+    Basically the same format as CNAME or NS
+    */
+    return NS_record(data, data_len, packet);
+}
+
+// 40
+char *SINK_record()
+{
+    // Obsolete - I don't think anyone uses this
+    return NULL;
 }
 
 // Helper Funcs
