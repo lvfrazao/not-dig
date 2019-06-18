@@ -159,7 +159,7 @@ No response.
 
 No response.
 
-## Bad Pointer 3 Responses (Self refernetial pointer)
+## Bad Pointer 3 Responses (Self referential pointer)
 
 ### Google (8.8.8.8)
 
