@@ -426,6 +426,8 @@ char *TXT_record(uint8_t *data, uint16_t data_len)
         txt_buffer[cur_loc + 1] = ' ';
         cur_loc += 2;
     }
+    if (txt_buffer[cur_loc - 1] == ' ')
+        txt_buffer[cur_loc - 1] = 0;
     txt_buffer[cur_loc] = 0;
     char *txt_str = malloc(sizeof(char) * strlen((char *)txt_buffer) + 1);
     memcpy(txt_str, txt_buffer, strlen((char *)txt_buffer) + 1);
