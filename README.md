@@ -43,7 +43,7 @@ To remove the executables run `$ make clean`
 Call the executable and optionally give it a port / server address, and provide the domain name and qtype.
 
 ```
-$ not-dig 198.51.44.1 frazao.ca. a
+$ not-dig -@198.51.44.1 frazao.ca. a
 ; <<>> Not DiG 0.0.1 <<>> frazao.ca. A
 ;; global options: +cmd
 ;; Got answer:
@@ -78,9 +78,13 @@ I wanted to practice my C programming and I wanted to learn more about socket ne
 
 ## TODO
 
-1. Implement better command line options handling
+1. ~~Implement better command line options handling~~ DONE
 2. Implement additional RRTYPEs
 3. Implement a recursive resolver server
 4. Implement a recursive resolver cache
 5. Implement an authoritative DNS server
 6. Expand scope of test suite
+7. Implement queries over TCP
+8. Implement dns trace funtionality
+9. Implement ability to specify DNS server by name instead of by IP
+10. Implement better input validation (e.g., autocorrect domains without terminal dot)
