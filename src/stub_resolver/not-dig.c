@@ -13,21 +13,18 @@
 #include <unistd.h>
 #include <time.h>
 
+#include "argparse.c" 
 #include "../dns/dns.h"
 #include "format_answer.c"
 
 #define MYPORT "53" // the port users will be connecting to
-#define BACKLOG 10  // how many pending connections queue will hold
 #define DEF_SERVER "8.8.8.8"
-#define BUF_SIZE 1
-#define RESP_BUF_SIZE 10000
+#define RESP_BUF_SIZE 1000000 // Source of issues, segault if response large than this
 #define TRUE 1
 #define FALSE 0
 #define LINEBRK "\n==========================================================================================================\n\n"
 #define DEBUG 0
 
-int isint(char *str);
-int h_in_command_line(int argc, char *argv[]);
 double get_wall_time(void);
 
 int main(int argc, char *argv[])
@@ -37,49 +34,29 @@ int main(int argc, char *argv[])
     char *domain;
     int qtype = 1;
 
-    if (h_in_command_line(argc, argv))
-        argc = 1;
-    switch (argc)
+    struct arguments arguments;
+
+    /* Default values. */
+    arguments.short_opt = 0;
+    arguments.bin_opt = 0;
+    arguments.port_opt = MYPORT;
+    arguments.server_opt = DEF_SERVER;
+    arguments.output_file = "-";
+
+    argp_parse(&argp, argc, argv, 0, 0, &arguments);
+    if (DEBUG)
     {
-    case 1:
-        fprintf(stderr, "Usage: %s <port number> <server addr> <name> <qtype>\n", argv[0]);
-        exit(EXIT_FAILURE);
-        break;
-    case 2:
-        strcpy(remote_port, MYPORT);
-        remote_server = DEF_SERVER;
-        domain = argv[1];
-        break;
-    case 3:
-        strcpy(remote_port, MYPORT);
-        remote_server = DEF_SERVER;
-        domain = argv[1];
-        qtype = qtype_str_to_int(argv[2]);
-        break;
-    case 4:
-        strcpy(remote_port, MYPORT);
-        remote_server = argv[1];
-        domain = argv[2];
-        qtype = qtype_str_to_int(argv[3]);
-        break;
-    case 5:
-        if (isint(argv[1]) && atoi(argv[1]) <= 65535)
-            strcpy(remote_port, argv[1]);
-        else
-        {
-            fprintf(stderr, "Port must be an integer under 65535\n");
-            exit(EXIT_FAILURE);
-        }
-        remote_server = argv[2];
-        domain = argv[3];
-        if (!isint(argv[4]))
-        qtype = qtype_str_to_int(argv[4]);
-        break;
-    default:
-        fprintf(stderr, "Usage: %s <port number> <remote server> <name>\n", argv[0]);
-        exit(1);
-        break;
+        printf("ARG1 = %s\nARG2 = %s\n", arguments.args[0], arguments.args[1]);
+        printf("SERVER = %s PORT = %s\n", arguments.server_opt, arguments.port_opt);
+        printf("OUTPUT_FILE = %s\n", arguments.output_file);
+        printf("SHORT = %s\n", arguments.short_opt ? "yes" : "no");
+        printf("BIN = %s\n", arguments.bin_opt ? "yes" : "no");
     }
+
+    strcpy(remote_port, MYPORT);
+    remote_server = arguments.server_opt;
+    domain = arguments.args[0];
+    qtype = qtype_str_to_int(arguments.args[1]);
 
     struct addrinfo hints, *res;
     int sockfd;
@@ -203,30 +180,6 @@ int main(int argc, char *argv[])
 }
 
 // Helper funcs
-int isint(char *str)
-{
-    char *c = str;
-    while (*c != '\0')
-    {
-        if (!isdigit(*c))
-            return 0;
-        c++;
-    }
-    return 1;
-}
-
-int h_in_command_line(int argc, char *argv[])
-{
-    for (int i = 1; i < argc; i++)
-    {
-        if (*(argv[i]) == '-' && *(argv[i] + 1) == 'h')
-        {
-            return 1;
-        }
-    }
-    return 0;
-}
-
 // From https://stackoverflow.com/questions/17432502/how-can-i-measure-cpu-time-and-wall-clock-time-on-both-linux-windows
 double get_wall_time()
 {
