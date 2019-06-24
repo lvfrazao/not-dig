@@ -12,20 +12,20 @@ uint32_t find_loc_in_packet(uint8_t *packet, uint8_t *data, uint16_t data_len);
 void print_packet(uint8_t *packet, uint32_t packet_len);
 char *base64_encode(uint8_t *data, uint32_t data_len);
 
-char *A_record(uint8_t *ip_addr);
-char *NS_record(uint8_t *encoded_ns, uint16_t data_len, uint8_t *packet);
-char *CNAME_record(uint8_t *encoded_ns, uint16_t data_len, uint8_t *packet);
-char *SOA_record(uint8_t *encoded_ns, uint16_t data_len, uint8_t *packet);
-char *PTR_record(uint8_t *encoded_name, uint16_t data_len, uint8_t *packet);
-char *HINFO_record(uint8_t *data, uint16_t data_len);
-char *MX_record(uint8_t *data, uint16_t data_len, uint8_t *packet);
-char *TXT_record(uint8_t *data, uint16_t data_len);
-char *AFSDB_record(uint8_t *data, uint16_t data_len, uint8_t *packet);
-char *AAAA_record(uint8_t *data);
-char *SRV_record(uint8_t *data, uint16_t data_len, uint8_t *packet);
-char *NAPTR_record(uint8_t *data, uint16_t data_len);
-char *CERT_record(uint8_t *data, uint16_t data_len);
-char *DNAME_record(uint8_t *data, uint16_t data_len, uint8_t *packet);
+char *A_str(uint8_t *ip_addr);
+char *NS_str(uint8_t *encoded_ns, uint16_t data_len, uint8_t *packet);
+char *CNAME_str(uint8_t *encoded_ns, uint16_t data_len, uint8_t *packet);
+char *SOA_str(uint8_t *encoded_ns, uint16_t data_len, uint8_t *packet);
+char *PTR_str(uint8_t *encoded_name, uint16_t data_len, uint8_t *packet);
+char *HINFO_str(uint8_t *data, uint16_t data_len);
+char *MX_str(uint8_t *data, uint16_t data_len, uint8_t *packet);
+char *TXT_str(uint8_t *data, uint16_t data_len);
+char *AFSDB_str(uint8_t *data, uint16_t data_len, uint8_t *packet);
+char *AAAA_str(uint8_t *data);
+char *SRV_str(uint8_t *data, uint16_t data_len, uint8_t *packet);
+char *NAPTR_str(uint8_t *data, uint16_t data_len);
+char *CERT_str(uint8_t *data, uint16_t data_len);
+char *DNAME_str(uint8_t *data, uint16_t data_len, uint8_t *packet);
 
 char *rdata_to_str(RRFORMAT *res_record, uint8_t *packet)
 {
@@ -34,46 +34,46 @@ char *rdata_to_str(RRFORMAT *res_record, uint8_t *packet)
     case (A):
         if (res_record->RDLENGTH != 4)
             return "Invalid IPv4 Addr";
-        return A_record(res_record->RDATA);
+        return A_str(res_record->RDATA);
         break;
     case (NS):
-        return NS_record(res_record->RDATA, res_record->RDLENGTH, packet);
+        return NS_str(res_record->RDATA, res_record->RDLENGTH, packet);
         break;
     case (CNAME):
-        return CNAME_record(res_record->RDATA, res_record->RDLENGTH, packet);
+        return CNAME_str(res_record->RDATA, res_record->RDLENGTH, packet);
         break;
     case (SOA):
-        return SOA_record(res_record->RDATA, res_record->RDLENGTH, packet);
+        return SOA_str(res_record->RDATA, res_record->RDLENGTH, packet);
         break;
     case (PTR):
-        return PTR_record(res_record->RDATA, res_record->RDLENGTH, packet);
+        return PTR_str(res_record->RDATA, res_record->RDLENGTH, packet);
         break;
     case (HINFO):
-        return HINFO_record(res_record->RDATA, res_record->RDLENGTH);
+        return HINFO_str(res_record->RDATA, res_record->RDLENGTH);
         break;
     case (MX):
-        return MX_record(res_record->RDATA, res_record->RDLENGTH, packet);
+        return MX_str(res_record->RDATA, res_record->RDLENGTH, packet);
         break;
     case (TXT):
-        return TXT_record(res_record->RDATA, res_record->RDLENGTH);
+        return TXT_str(res_record->RDATA, res_record->RDLENGTH);
         break;
     case (AFSDB):
-        return AFSDB_record(res_record->RDATA, res_record->RDLENGTH, packet);
+        return AFSDB_str(res_record->RDATA, res_record->RDLENGTH, packet);
         break;
     case (AAAA):
-        return AAAA_record(res_record->RDATA);
+        return AAAA_str(res_record->RDATA);
         break;
     case (SRV):
-        return SRV_record(res_record->RDATA, res_record->RDLENGTH, packet);
+        return SRV_str(res_record->RDATA, res_record->RDLENGTH, packet);
         break;
     case (NAPTR):
-        return NAPTR_record(res_record->RDATA, res_record->RDLENGTH);
+        return NAPTR_str(res_record->RDATA, res_record->RDLENGTH);
         break;
     case (CERT):
-        return CERT_record(res_record->RDATA, res_record->RDLENGTH);
+        return CERT_str(res_record->RDATA, res_record->RDLENGTH);
         break;
     case (DNAME):
-        return DNAME_record(res_record->RDATA, res_record->RDLENGTH, packet);
+        return DNAME_str(res_record->RDATA, res_record->RDLENGTH, packet);
         break;
     default:;
         char *hex_stream = malloc(sizeof(char) * res_record->RDLENGTH * 3 + 1); // 3 chars per hex byte
@@ -92,7 +92,7 @@ char *rdata_to_str(RRFORMAT *res_record, uint8_t *packet)
 }
 
 // 1
-char *A_record(uint8_t *ip_addr)
+char *A_str(uint8_t *ip_addr)
 {
     char format[] = "%d.%d.%d.%d";
     // Max size of IP addr is 15 - 255.255.255.255
@@ -102,7 +102,7 @@ char *A_record(uint8_t *ip_addr)
 }
 
 // 2
-char *NS_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
+char *NS_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
 {
     uint32_t loc = find_loc_in_packet(packet, data, data_len);
     uint8_t *encoded_name = decompress_name(packet, &loc);
@@ -112,25 +112,25 @@ char *NS_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
 }
 
 // 3
-char *MD_record()
+char *MD_str()
 {
     return NULL; // Obsolete
 }
 
 // 4
-char *MF_record()
+char *MF_str()
 {
     return NULL; // Obsolete
 }
 
 // 5
-char *CNAME_record(uint8_t *encoded_name, uint16_t data_len, uint8_t *packet)
+char *CNAME_str(uint8_t *encoded_name, uint16_t data_len, uint8_t *packet)
 {
-    return NS_record(encoded_name, data_len, packet);
+    return NS_str(encoded_name, data_len, packet);
 }
 
 // 6
-char *SOA_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
+char *SOA_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
 {
     if (DEBUG)
     {
@@ -257,53 +257,53 @@ char *SOA_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
     char record_buf[buf_size];
     memset(record_buf, 0, buf_size);
     snprintf(record_buf, buf_size, "%s %s %d %d %d %d %d", mname, rname, serial, refresh, retry, expire, minimum);
-    char *soa_record = malloc(sizeof(char) * strlen(record_buf) + 1);
-    strcpy(soa_record, record_buf);
+    char *soa_str = malloc(sizeof(char) * strlen(record_buf) + 1);
+    strcpy(soa_str, record_buf);
 
     free(mname);
     free(rname);
-    return soa_record;
+    return soa_str;
 }
 
 // 7
-char *MB_record()
+char *MB_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 8
-char *MG_record()
+char *MG_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 9
-char *MR_record()
+char *MR_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 10
-char *NULL_record()
+char *NULL_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 11
-char *WKS_record()
+char *WKS_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 12
-char *PTR_record(uint8_t *encoded_name, uint16_t data_len, uint8_t *packet)
+char *PTR_str(uint8_t *encoded_name, uint16_t data_len, uint8_t *packet)
 {
-    return NS_record(encoded_name, data_len, packet);
+    return NS_str(encoded_name, data_len, packet);
 }
 
 uint32_t find_loc_in_packet(uint8_t *packet, uint8_t *data, uint16_t data_len)
@@ -326,7 +326,7 @@ uint32_t find_loc_in_packet(uint8_t *packet, uint8_t *data, uint16_t data_len)
 }
 
 // 13
-char *HINFO_record(uint8_t *data, uint16_t data_len)
+char *HINFO_str(uint8_t *data, uint16_t data_len)
 {
     /*
                                   1  1  1  1  1  1
@@ -362,14 +362,14 @@ char *HINFO_record(uint8_t *data, uint16_t data_len)
 }
 
 // 14
-char *MINFO_record()
+char *MINFO_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 15
-char *MX_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
+char *MX_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
 {
     /*
                                   1  1  1  1  1  1
@@ -399,7 +399,7 @@ char *MX_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
 }
 
 // 16
-char *TXT_record(uint8_t *data, uint16_t data_len)
+char *TXT_str(uint8_t *data, uint16_t data_len)
 {
     uint16_t buf_size = 65536 - 1; // RDATA len limit is 65535 bytes
     uint8_t txt_buffer[buf_size];
@@ -435,14 +435,14 @@ char *TXT_record(uint8_t *data, uint16_t data_len)
 }
 
 // 17
-char *RP_record()
+char *RP_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 18
-char *AFSDB_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
+char *AFSDB_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
 {
     /*
                                   1  1  1  1  1  1
@@ -454,7 +454,7 @@ char *AFSDB_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
     /                                               /
     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
     */
-    return MX_record(data, data_len, packet);
+    return MX_str(data, data_len, packet);
 }
 
 // 19
@@ -465,35 +465,35 @@ char *X25_record()
 }
 
 // 20
-char *ISDN_record()
+char *ISDN_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 21
-char *RT_record()
+char *RT_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 22
-char *NSAP_record()
+char *NSAP_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 23
-char *NSAP_PTR_record()
+char *NSAP_PTR_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 24
-char *SIG_record()
+char *SIG_str()
 {
     /*
     Defined in RFC 2535
@@ -522,7 +522,7 @@ char *SIG_record()
 }
 
 // 25
-char *KEY_record()
+char *KEY_str()
 {
     /*
     Defined in RFC 2535
@@ -541,21 +541,21 @@ char *KEY_record()
 }
 
 // 26
-char *PX_record()
+char *PX_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 27
-char *GPOS_record()
+char *GPOS_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 28
-char *AAAA_record(uint8_t *data)
+char *AAAA_str(uint8_t *data)
 {
     char format[] = "%X:%X:%X:%X:%X:%X:%X:%X";
     // Max size of v6 addr is 39 - FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
@@ -575,7 +575,7 @@ char *AAAA_record(uint8_t *data)
 }
 
 // 29
-char *LOC_record()
+char *LOC_str()
 {
     /*
     Defined in RFC 1876
@@ -605,7 +605,7 @@ char *LOC_record()
 }
 
 // 30
-char *NXT_record()
+char *NXT_str()
 {
     /*
     Defined in RFC 2535
@@ -622,21 +622,21 @@ char *NXT_record()
 }
 
 // 31
-char *EID_record()
+char *EID_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 32
-char *NIMLOC_record()
+char *NIMLOC_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 33
-char *SRV_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
+char *SRV_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
 {
     /*
     Format:
@@ -678,14 +678,14 @@ char *SRV_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
 }
 
 // 34
-char *ATMA_record()
+char *ATMA_str()
 {
     // Obsolete
     return NULL;
 }
 
 // 35
-char *NAPTR_record(uint8_t *data, uint16_t data_len)
+char *NAPTR_str(uint8_t *data, uint16_t data_len)
 {
     /*
                                     1  1  1  1  1  1
@@ -751,7 +751,7 @@ char *NAPTR_record(uint8_t *data, uint16_t data_len)
 }
 
 // 36
-char *KX_record()
+char *KX_str()
 {
     // Definde in RFC 2230
     // Will not implement at this time, too much of a PITA
@@ -759,7 +759,7 @@ char *KX_record()
 }
 
 // 37
-char *CERT_record(uint8_t *data, uint16_t data_len)
+char *CERT_str(uint8_t *data, uint16_t data_len)
 {
     /*
     Defined in RFC 4398
@@ -797,7 +797,7 @@ char *A6_record()
 }
 
 // 39
-char *DNAME_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
+char *DNAME_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
 {
     /*
     Defined in RFC 6672
@@ -805,11 +805,11 @@ char *DNAME_record(uint8_t *data, uint16_t data_len, uint8_t *packet)
     <owner> <ttl> <class> DNAME <target>
     Basically the same format as CNAME or NS
     */
-    return NS_record(data, data_len, packet);
+    return NS_str(data, data_len, packet);
 }
 
 // 40
-char *SINK_record()
+char *SINK_str()
 {
     // Obsolete - I don't think anyone uses this
     return NULL;
