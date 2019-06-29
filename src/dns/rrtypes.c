@@ -405,7 +405,7 @@ char *TXT_str(uint8_t *data, uint16_t data_len)
     uint8_t txt_buffer[buf_size];
     memset(txt_buffer, 0, buf_size);
     uint16_t cur_loc = 0, len = data[0];
-    // Cur loc represents the current index in our buffer
+    // cur_loc represents the current index in our buffer
     // cur_str represents the count of digits read from the current string
     for (uint16_t i = 1; i < data_len && cur_loc < buf_size - 2; i++)
     {
