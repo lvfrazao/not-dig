@@ -16,10 +16,22 @@ int qtype_str_to_int(char *qtype_str);
 char *opcode_to_str(uint8_t opcode_int);
 char *rcode_to_str(uint8_t rcode_int);
 
-void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote_server, char *remote_port, char *datetime, uint32_t msg_size, uint8_t *packet)
+void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote_server, char *remote_port, char *datetime, uint32_t msg_size, uint8_t *packet, uint8_t short_ans, uint8_t bin)
 {
     if (DEBUG)
         print_packet(packet, msg_size);
+
+    if (short_ans || bin)
+    {
+        for (int i = 0; i < msg->head->ANCOUNT; i++)
+        {
+            if (bin)
+                fwrite(msg->ans[i]->RDATA, sizeof(uint8_t), msg->ans[i]->RDLENGTH, stdout);
+            else
+                printf("%s\n", msg->ans[i]->rdata_to_str(msg->ans[i], packet));
+        }
+        exit(0);
+    }
 
     char *opcode = opcode_to_str(msg->head->opcode);
     char *status = rcode_to_str(msg->head->RCODE);

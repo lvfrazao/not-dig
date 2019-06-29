@@ -25,7 +25,13 @@
 #define LINEBRK "\n==========================================================================================================\n\n"
 #define DEBUG 0
 
+struct response_packet {
+    uint8_t *packet;
+    uint32_t packet_size;
+};
+
 double get_wall_time(void);
+struct response_packet *dns_query(char *remote_port, char *remote_server, char *domain, int qtype);
 
 int main(int argc, char *argv[])
 {
@@ -57,7 +63,45 @@ int main(int argc, char *argv[])
     remote_server = arguments.server_opt;
     domain = arguments.args[0];
     qtype = qtype_str_to_int(arguments.args[1]);
+    uint8_t short_opt = arguments.short_opt;
+    uint8_t bin_opt = arguments.bin_opt;
 
+
+    double start = get_wall_time();
+    struct response_packet *resp_query = dns_query(remote_port, remote_server, domain, qtype);
+    double end = get_wall_time();
+    DNSMessage *ans_msg = packet_to_message(resp_query->packet);
+
+
+    // Generate datetime
+    char datetime[40];
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+    // Date time format: "Sat May 25 00:51:17 DST 2019"
+    strftime(datetime, sizeof(datetime), "%a %b %d %X %Z %Y", tm);
+
+    pretty_print_response(ans_msg, (end - start) * 1000, remote_server, remote_port, datetime, resp_query->packet_size, resp_query->packet, short_opt, bin_opt);
+
+    free(resp_query->packet);
+    free(resp_query);
+    return 0;
+}
+
+// Helper funcs
+// From https://stackoverflow.com/questions/17432502/how-can-i-measure-cpu-time-and-wall-clock-time-on-both-linux-windows
+double get_wall_time()
+{
+    struct timeval time;
+    if (gettimeofday(&time, NULL))
+    {
+        //  Handle error
+        return 0;
+    }
+    return (double)time.tv_sec + (double)time.tv_usec * .000001;
+}
+
+struct response_packet *dns_query(char *remote_port, char *remote_server, char *domain, int qtype)
+{
     struct addrinfo hints, *res;
     int sockfd;
 
@@ -110,7 +154,6 @@ int main(int argc, char *argv[])
     int num_bytes = -1, failures = 0;
     uint8_t resp[RESP_BUF_SIZE];
 
-    double start = get_wall_time();
     while (num_bytes == -1)
     {
         sendto(sockfd, packet, msg->__len__uncomp, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
@@ -129,9 +172,6 @@ int main(int argc, char *argv[])
         num_bytes = recvfrom(sockfd, resp, RESP_BUF_SIZE, MSG_WAITALL, (struct sockaddr *)&servaddr, &from_len);
         if (num_bytes == -1)
         {
-            // Not sure whether we want to generate a new ID for the retry
-            // msg->head->ID = generate_random_id();
-            // packet = msg->to_wire_uncompressed(msg);
             failures++;
         }
         if (failures > 3)
@@ -141,7 +181,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    double end = get_wall_time();
     if (DEBUG)
     {
         printf("Received %d bytes from %s:%s\n", num_bytes, remote_server, remote_port);
@@ -160,34 +199,13 @@ int main(int argc, char *argv[])
         }
         printf("%s", LINEBRK);
     }
-
-    close(sockfd);
-
-    DNSMessage *ans_msg = packet_to_message(resp);
-
-    // Generate datetime
-    char datetime[40];
-    time_t t = time(NULL);
-    struct tm *tm = localtime(&t);
-    // Date time format: "Sat May 25 00:51:17 DST 2019"
-    strftime(datetime, sizeof(datetime), "%a %b %d %X %Z %Y", tm);
-
-    pretty_print_response(ans_msg, (end - start) * 1000, remote_server, remote_port, datetime, num_bytes, resp);
+    struct response_packet *resp_query = malloc(sizeof(struct response_packet));
+    resp_query->packet = malloc(sizeof(uint8_t) * num_bytes);
+    memcpy(resp_query->packet, resp, sizeof(uint8_t) * num_bytes);
+    resp_query->packet_size = num_bytes;
 
     msg->__del__(msg);
     free(packet);
-    return 0;
-}
-
-// Helper funcs
-// From https://stackoverflow.com/questions/17432502/how-can-i-measure-cpu-time-and-wall-clock-time-on-both-linux-windows
-double get_wall_time()
-{
-    struct timeval time;
-    if (gettimeofday(&time, NULL))
-    {
-        //  Handle error
-        return 0;
-    }
-    return (double)time.tv_sec + (double)time.tv_usec * .000001;
+    close(sockfd);
+    return resp_query;
 }
