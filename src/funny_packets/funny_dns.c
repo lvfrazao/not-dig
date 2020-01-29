@@ -37,6 +37,7 @@ int bad_ptr_2_query(char *remote_port, char *remote_server);
 int bad_ptr_3_query(char *remote_port, char *remote_server);
 int bad_ptr_4_query(char *remote_port, char *remote_server);
 int incomplete_packet_1_query(char *remote_port, char *remote_server);
+int over_length_domain_name1(char *remote_port, char *remote_server);
 
 int main(int argc, char *argv[])
 {
@@ -59,7 +60,9 @@ int main(int argc, char *argv[])
     printf("Testing bad pointer 4 query\n");
     //bad_ptr_4_query(remote_port, remote_server);
     printf("Testing incomplete packet query\n");
-    incomplete_packet_1_query(remote_port, remote_server);
+    // incomplete_packet_1_query(remote_port, remote_server);
+    printf("Testing overly long domain name query\n");
+    over_length_domain_name1(remote_port, remote_server);
     return 0;
 }
 
@@ -184,6 +187,31 @@ int incomplete_packet_1_query(char *remote_port, char *remote_server)
     return 0;
 }
 
+int over_length_domain_name1(char *remote_port, char *remote_server)
+{
+    // Make name pointer point to itself (circular pointer)
+    uint8_t packet[] = {
+        // Header
+        0xaa, 0xaa, // ID
+        0x01, 0x20, // QR(0) query, RD, AD
+        0x00, 0x01, // 1 question
+        0x00, 0x00, // 0 answer
+        0x00, 0x00, // 0 NS
+        0x00, 0x00, // 0 additional
+        // Question 1
+        0x4E, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B,
+        0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77,
+        0x78, 0x79, 0x7A, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
+        0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75,
+        0x76, 0x77, 0x78, 0x79, 0x7A, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,
+        0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73,
+        0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x03, 0x63, 0x6F, 0x6D
+        // abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz.com
+    };
+    send_packet(packet, 95, remote_port, remote_server);
+    return 0;
+}
+
 int send_packet(uint8_t *packet, uint32_t packet_len, char *remote_port, char *remote_server)
 {
     struct addrinfo hints, *res;
@@ -289,7 +317,7 @@ int send_packet(uint8_t *packet, uint32_t packet_len, char *remote_port, char *r
     // Date time format: "Sat May 25 00:51:17 DST 2019"
     strftime(datetime, sizeof(datetime), "%a %b %d %X %Z %Y", tm);
 
-    pretty_print_response(ans_msg, (end - start) * 1000, remote_server, remote_port, datetime, num_bytes, resp);
+    pretty_print_response(ans_msg, (end - start) * 1000, remote_server, remote_port, datetime, num_bytes, resp, 0, 0);
 
     return 0;
 }
