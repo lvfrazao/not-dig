@@ -1,6 +1,6 @@
-# V-DNS
+# not-dig
 
-## Victor's DNS Implementation
+## A Bad Clone of the `dig` Tool
 
 This project implements a stub resolver client that is able to query either a recursive or authoritative DNS server.
 
