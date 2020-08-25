@@ -735,6 +735,8 @@ uint16_t generate_random_id(void)
     Generates a random 2 byte number to serve as the header ID 
     */
     uint16_t stream;
+    // This is probably absolutely awful for performance, need a better way of
+    // getting random numbers that doesnt involve making 4 syscalls.
     FILE *urandom = fopen("/dev/urandom", "rb");
     if (urandom == NULL)
     {
