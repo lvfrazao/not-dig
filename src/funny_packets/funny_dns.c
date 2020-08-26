@@ -49,20 +49,33 @@ int main(int argc, char *argv[])
     char *remote_server, *remote_port;
     remote_port = argv[1];
     remote_server = argv[2];
-    printf("Testing multi_question query\n");
-    //multi_question_query(remote_port, remote_server);
-    printf("Testing bad pointer 1 query\n");
-    //bad_ptr_1_query(remote_port, remote_server);
-    printf("Testing bad pointer 2 query\n");
-    //bad_ptr_2_query(remote_port, remote_server);
-    printf("Testing bad pointer 3 query\n");
-    //bad_ptr_3_query(remote_port, remote_server);
-    printf("Testing bad pointer 4 query\n");
-    //bad_ptr_4_query(remote_port, remote_server);
-    printf("Testing incomplete packet query\n");
-    // incomplete_packet_1_query(remote_port, remote_server);
-    printf("Testing overly long domain name query\n");
-    over_length_domain_name1(remote_port, remote_server);
+
+    int (*test_funcs[]) (char *remote_port, char *remote_server) = {
+        multi_question_query,
+        bad_ptr_1_query,
+        bad_ptr_2_query,
+        bad_ptr_3_query,
+        bad_ptr_4_query,
+        incomplete_packet_1_query,
+        over_length_domain_name1,
+        };
+    
+    char *test_desc[] = {
+        "Testing multi_question query",
+        "Testing bad pointer 1 query",
+        "Testing bad pointer 2 query",
+        "Testing bad pointer 3 query",
+        "Testing bad pointer 4 query",
+        "Testing incomplete packet query",
+        "Testing overly long domain name query",
+    };
+
+    for (int i = 0; i < sizeof(test_funcs)/sizeof(test_funcs[0]); i++) {
+        printf("%d) %s\n", i + 1, test_desc[i]);
+        test_funcs[i](remote_port, remote_server);
+    }
+    printf("Complete!\n");
+
     return 0;
 }
 
@@ -171,7 +184,7 @@ int bad_ptr_4_query(char *remote_port, char *remote_server)
 
 int incomplete_packet_1_query(char *remote_port, char *remote_server)
 {
-    // Make name pointer point to itself (circular pointer)
+    // Make name end abruptly (no 0x00 at end of name)
     uint8_t packet[] = {
         // Header
         0xaa, 0xaa, // ID
@@ -189,7 +202,7 @@ int incomplete_packet_1_query(char *remote_port, char *remote_server)
 
 int over_length_domain_name1(char *remote_port, char *remote_server)
 {
-    // Make name pointer point to itself (circular pointer)
+    // Make name longer than legally allowed
     uint8_t packet[] = {
         // Header
         0xaa, 0xaa, // ID
@@ -254,7 +267,7 @@ int send_packet(uint8_t *packet, uint32_t packet_len, char *remote_port, char *r
     servaddr.sin_addr.s_addr = inet_addr(remote_server);
 
     // Receive response from server
-    unsigned int from_len;
+    unsigned int from_len = 0;
     int num_bytes = -1, failures = 0;
     uint8_t resp[RESP_BUF_SIZE];
 
@@ -281,8 +294,8 @@ int send_packet(uint8_t *packet, uint32_t packet_len, char *remote_port, char *r
         }
         if (failures > 3)
         {
-            fprintf(stderr, "Socket timed out waiting for response\n");
-            exit(EXIT_FAILURE);
+            perror("Receive error");
+            return EXIT_FAILURE;
         }
     }
 
@@ -292,7 +305,7 @@ int send_packet(uint8_t *packet, uint32_t packet_len, char *remote_port, char *r
         printf("Received %d bytes from %s:%s\n", num_bytes, remote_server, remote_port);
         if (num_bytes == -1)
         {
-            perror("Error receiving response: ");
+            perror("Error receiving response");
         }
         else
         {
