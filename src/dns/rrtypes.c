@@ -77,6 +77,10 @@ char *rdata_to_str(RRFORMAT *res_record, uint8_t *packet)
         break;
     default:;
         char *hex_stream = malloc(sizeof(char) * res_record->RDLENGTH * 3 + 1); // 3 chars per hex byte
+        if (hex_stream == NULL) {
+            perror("Malloc failed!");
+            exit(EXIT_FAILURE);
+        }
         for (uint16_t i = 0; i < res_record->RDLENGTH; i++)                     // for byte in res_record->RDATA
         {
             char byte_val[3];
@@ -96,7 +100,12 @@ char *A_str(uint8_t *ip_addr)
 {
     char format[] = "%d.%d.%d.%d";
     // Max size of IP addr is 15 - 255.255.255.255
+    // Since we return this array we need to allocate it on the heap
     char *data_str = malloc(sizeof(char) * 16);
+    if (data_str == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     snprintf(data_str, 16, format, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3]);
     return data_str;
 }
@@ -258,6 +267,10 @@ char *SOA_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
     memset(record_buf, 0, buf_size);
     snprintf(record_buf, buf_size, "%s %s %d %d %d %d %d", mname, rname, serial, refresh, retry, expire, minimum);
     char *soa_str = malloc(sizeof(char) * strlen(record_buf) + 1);
+    if (soa_str == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     strcpy(soa_str, record_buf);
 
     free(mname);
@@ -347,6 +360,10 @@ char *HINFO_str(uint8_t *data, uint16_t data_len)
     second_str_loc = first_str_len + 2;
     cpu = malloc(sizeof(char) * (first_str_len + 1));
     os = malloc(sizeof(char) * (second_str_len + 1));
+    if (cpu == NULL || os == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
 
     memcpy(cpu, &data[first_str_loc], first_str_len);
     memcpy(os, &data[second_str_loc], second_str_len);
@@ -355,6 +372,10 @@ char *HINFO_str(uint8_t *data, uint16_t data_len)
     os[second_str_len] = 0;
 
     char *str_repr = malloc(sizeof(char) * (first_str_len + second_str_len + 2));
+    if (str_repr == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     sprintf(str_repr, "%s %s", cpu, os);
     free(cpu);
     free(os);
@@ -391,6 +412,10 @@ char *MX_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
     char *exchange = decode_domain_name(encoded_name);
 
     char *mx_str = malloc(sizeof(char) * (5 + strlen(exchange) + 1));
+    if (mx_str == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     sprintf(mx_str, "%d %s", preference, exchange);
 
     free(encoded_name);
@@ -430,6 +455,10 @@ char *TXT_str(uint8_t *data, uint16_t data_len)
         txt_buffer[cur_loc - 1] = 0;
     txt_buffer[cur_loc] = 0;
     char *txt_str = malloc(sizeof(char) * strlen((char *)txt_buffer) + 1);
+    if (txt_str == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     memcpy(txt_str, txt_buffer, strlen((char *)txt_buffer) + 1);
     return txt_str;
 }
@@ -561,6 +590,10 @@ char *AAAA_str(uint8_t *data)
     // Max size of v6 addr is 39 - FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
     uint8_t addr_str_max_size = 40;
     char *data_str = malloc(sizeof(char) * addr_str_max_size);
+    if (data_str == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     uint16_t groups[8];
     for (uint8_t cur_loc = 0, group = 0; group < 8; cur_loc += 2, group++)
     {
@@ -670,6 +703,10 @@ char *SRV_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
     char *target = decode_domain_name(encoded_name);
 
     char *srv_str = malloc(sizeof(char) * (5 + 5 + 5 + strlen(target) + 1));
+    if (srv_str == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     sprintf(srv_str, "%d %d %d %s", priority, weight, port, target);
 
     free(encoded_name);
@@ -717,6 +754,10 @@ char *NAPTR_str(uint8_t *data, uint16_t data_len)
 
     uint8_t flags_len = data[4];
     flags = malloc(sizeof(char) * flags_len + 1);
+    if (flags == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     memcpy(flags, &data[5], flags_len);
     flags[flags_len] = 0;
     cur_loc = 5 + flags_len;
@@ -724,6 +765,10 @@ char *NAPTR_str(uint8_t *data, uint16_t data_len)
     uint8_t services_len = data[cur_loc];
     cur_loc++;
     services = malloc(sizeof(char) * services_len + 1);
+    if (services == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     memcpy(services, &data[cur_loc], services_len);
     services[services_len] = 0;
     cur_loc += services_len;
@@ -731,6 +776,10 @@ char *NAPTR_str(uint8_t *data, uint16_t data_len)
     uint8_t regexp_len = data[cur_loc];
     cur_loc++;
     regexp = malloc(sizeof(char) * regexp_len + 1);
+    if (regexp == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     memcpy(regexp, &data[cur_loc], regexp_len);
     regexp[regexp_len] = 0;
     cur_loc += regexp_len;
@@ -740,6 +789,10 @@ char *NAPTR_str(uint8_t *data, uint16_t data_len)
     char *naptr_str = malloc(sizeof(char) * (5 + 5 + flags_len + services_len +
                                              regexp_len + strlen(replacement) +
                                              6));
+    if (naptr_str == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     sprintf(naptr_str, "%d %d \"%s\" \"%s\" \"%s\" %s", order, preference, flags, services,
             regexp, replacement);
 
@@ -783,6 +836,10 @@ char *CERT_str(uint8_t *data, uint16_t data_len)
     certificate = base64_encode(&data[5], data_len - 5);
 
     char *cert_str = malloc(sizeof(char) * (5 + 5 + 3 + 3 + strlen(certificate) + 1));
+    if (cert_str == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     sprintf(cert_str, "%d %d %d %s", type, key_tag, algorithm, certificate);
 
     free(certificate);
@@ -843,6 +900,10 @@ char *base64_encode(uint8_t *data, uint32_t data_len)
         padding_len = 4 - (b64_len % 4);
     }
     char *b64encoded_data = malloc(sizeof(char) * (b64_len + padding_len + 1));
+    if (b64encoded_data == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     char encoding_table[] = {
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
         'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b',

@@ -255,6 +255,10 @@ Header *__init__header(
 Question *__init__question(char *QNAME, uint16_t QTYPE, uint16_t QCLASS)
 {
     Question *self = malloc(sizeof(Question));
+    if (self == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     self->QNAME = encode_domain_name(QNAME);
     if (last_result)
     {
@@ -279,6 +283,10 @@ RRFORMAT *__init__rr(
     uint8_t *RDATA)
 {
     RRFORMAT *self = malloc(sizeof(RRFORMAT));
+    if (self == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     self->NAME = encode_domain_name(NAME);
     if (last_result)
     {
@@ -356,6 +364,10 @@ DNSMessage *__init__message(
     Additional **addl)
 {
     DNSMessage *self = malloc(sizeof(DNSMessage));
+    if (self == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     self->head = head;
     self->quest = quest;
     if (!self->head || !self->quest)
@@ -378,12 +390,20 @@ DNSMessage *__init__message(
 DNSMessage *packet_to_message(uint8_t *packet)
 {
     Header *msg_head = bytes_to_header(packet);
+    if (msg_head == NULL) {
+        perror("Failed to parse bytes into message header");
+        exit(EXIT_FAILURE);
+    }
     uint32_t cur_loc = 12; // Stndard header size
 
     Question **quest = malloc(sizeof(Question *) * msg_head->QDCount);
     Answer **ans = malloc(sizeof(Answer *) * msg_head->ANCOUNT);
     Authority **auth = malloc(sizeof(Authority *) * msg_head->NSCOUNT);
     Authority **addl = malloc(sizeof(Additional *) * msg_head->ARCOUNT);
+    if (quest == NULL || ans == NULL || auth == NULL || addl == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
 
     for (int i = 0; i < msg_head->QDCount; i++)
     {
@@ -515,6 +535,10 @@ RRFORMAT *bytes_to_resource_record(uint8_t *packet, uint32_t *cur_loc)
     *cur_loc += 2;
 
     RDATA = malloc(sizeof(uint8_t) * RDLENGTH);
+    if (RDATA == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     for (uint16_t i = 0; i < RDLENGTH; i++, *cur_loc += 1)
     {
         RDATA[i] = packet[*cur_loc];
@@ -553,6 +577,10 @@ uint32_t calc_uncomp_packet_len(DNSMessage *msg)
 uint8_t *message_to_packet_uncompressed(DNSMessage *self)
 {
     uint8_t *packet = malloc(sizeof(uint8_t) * self->__len__uncomp);
+    if (packet == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     uint8_t *packet_start = packet; // Valgrind doesnt like this
 
     // Transcribe the header
@@ -633,6 +661,10 @@ char *encode_domain_name(char *name)
     if (name[0] == '\0')
     {
         encoded_name = malloc(sizeof(char));
+        if (encoded_name == NULL) {
+            perror("Malloc failed!");
+            exit(EXIT_FAILURE);
+        }
         *encoded_name = '\0';
         return encoded_name;
     }
@@ -649,6 +681,10 @@ char *encode_domain_name(char *name)
         return NULL;
     }
     encoded_name = malloc(sizeof(char) * strlen(name) + 2);
+    if (encoded_name == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     encoded_name[0] = '.';
     strcpy(encoded_name + 1, name);
     int last_dot = 0;
@@ -689,6 +725,10 @@ char *decode_domain_name(uint8_t *encoded_name)
     if (*encoded_name == '\0')
     {
         char *decoded_domain = malloc(sizeof(char) * 2);
+        if (decoded_domain == NULL) {
+            perror("Malloc failed!");
+            exit(EXIT_FAILURE);
+        }
         strcpy(decoded_domain, ".");
         return decoded_domain;
     }
@@ -725,6 +765,10 @@ char *decode_domain_name(uint8_t *encoded_name)
     counter++;
     domain[counter - 1] = '\0';
     char *decoded_domain = malloc(sizeof(char) * counter);
+    if (decoded_domain == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     memcpy(decoded_domain, domain, sizeof(char) * counter);
     return decoded_domain;
 }
@@ -813,6 +857,10 @@ uint16_t *header_to_bytes(Header *self)
     */
     int header_len = 6;
     uint16_t *header_bytes = malloc(sizeof(uint16_t) * header_len);
+    if (header_bytes == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
 
     uint16_t line2 = 0x0000;
     line2 |= self->QR << 15;
@@ -853,6 +901,10 @@ uint8_t *question_to_bytes(Question *self)
     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
     */
     uint8_t *question_bytes = malloc(sizeof(uint8_t) * self->__len__);
+    if (question_bytes == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
 
     int cur_loc = 0;
 
@@ -900,6 +952,10 @@ uint8_t *rr_to_bytes_uncompressed(Answer *self)
     */
     int cur_index = 0;
     uint8_t *answer_bytes = malloc(sizeof(uint8_t) * self->__len__);
+    if (answer_bytes == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
 
     // Set domain name
     for (int i = 0; i < strlen(self->NAME) + 1; i++, cur_index++)
@@ -974,6 +1030,10 @@ uint8_t *decompress_name(uint8_t *packet, uint32_t *cur_loc)
     }
     *cur_loc += 1;
     uint8_t *decompressed_name = malloc(sizeof(uint8_t) * arraylen(encoded_name));
+    if (decompressed_name == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     memcpy(decompressed_name, encoded_name, arraylen(encoded_name));
     return decompressed_name;
 }

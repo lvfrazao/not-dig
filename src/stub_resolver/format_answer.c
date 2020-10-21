@@ -118,6 +118,10 @@ void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote
 char *str_to_upper(char *str)
 {
     char *c = malloc(sizeof(char *) * strlen(str) + 1);
+    if (c == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
 
     int i = 0;
     while (str[i] != '\0')

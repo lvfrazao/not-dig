@@ -30,6 +30,10 @@ DNSMessage *make_query_message(char *domain, uint16_t qtype, uint8_t rd)
         return NULL;
     }
     Question **quest_list = malloc(sizeof(Question*) * 1);
+    if (quest_list == NULL) {
+        perror("Malloc failed!");
+        exit(EXIT_FAILURE);
+    }
     *quest_list = query_question;
     msg = __init__message(query_header, quest_list, NULL, NULL, NULL);
     if (msg == NULL)
