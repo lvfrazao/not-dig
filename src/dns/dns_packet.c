@@ -778,26 +778,30 @@ uint16_t generate_random_id(void)
     /*
     Generates a random 2 byte number to serve as the header ID 
     */
-    uint16_t stream;
-    // This is probably absolutely awful for performance, need a better way of
-    // getting random numbers that doesnt involve making 4 syscalls.
-    FILE *urandom = fopen("/dev/urandom", "rb");
-    if (urandom == NULL)
-    {
-        perror("Unable to open /dev/urandom: ");
-        last_result = ENTROPY_ERROR;
-        return 0;
-    }
-    int bytes_read = fread(&stream, sizeof(uint16_t), 1, urandom);
-    fclose(urandom);
-    if (bytes_read != 1)
-    {
-        fprintf(stderr, "Unable to generate random ID\n");
-        last_result = ENTROPY_ERROR;
-        return 0;
+    #define page_size 4096
+    static int cur_pos = 0;
+    static uint16_t stream[page_size];
+    if (cur_pos == page_size) {
+        FILE *urandom = fopen("/dev/urandom", "rb");
+        if (urandom == NULL)
+        {
+            perror("Unable to open /dev/urandom: ");
+            last_result = ENTROPY_ERROR;
+            return 0;
+        }
+        int bytes_read = fread(&stream, sizeof(uint16_t), page_size, urandom);
+        if (bytes_read != page_size)
+        {
+            fprintf(stderr, "Unable to generate random ID\n");
+            last_result = ENTROPY_ERROR;
+            return 0;
+        }
+        fclose(urandom);
+        cur_pos = 0;
     }
     last_result = NOERROR;
-    return stream;
+
+    return stream[cur_pos++];
 }
 
 uint32_t arraylen(uint8_t *array)
