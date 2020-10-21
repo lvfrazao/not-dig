@@ -260,7 +260,7 @@ char *SOA_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
     minimum = data[cur_loc];
     minimum = (minimum << 24) | ((int32_t)data[cur_loc + 1] << 16) |
               ((int32_t)data[cur_loc + 2] << 8) | data[cur_loc + 3];
-    cur_loc += 4;
+    cur_loc += 4; // Useless assignment, I like it though as it keeps track of how far we've read
 
     int buf_size = 1000;
     char record_buf[buf_size];
