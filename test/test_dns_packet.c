@@ -535,7 +535,8 @@ int test_packet_generation_perf_1()
     /*
     Tests query packet generation rate. Fails if rate falls below a minimum value.
     */
-    uint32_t num_packets = 10000;
+    uint32_t num_packets = 30000;
+    int MIN_RATE = 50000;
     clock_t start, end;
     double cpu_time_used;
     start = clock();
@@ -559,7 +560,7 @@ int test_packet_generation_perf_1()
     cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
     double gen_rate = num_packets / cpu_time_used;
 
-    _assert(gen_rate > 15000);
+    _assert(gen_rate > MIN_RATE);
     return 0;
 }
 
