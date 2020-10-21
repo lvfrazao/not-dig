@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
     char remote_port[6];
     char *remote_server; // 255.255.255.255\0
     char *domain;
-    int qtype = 1;
 
     struct arguments arguments;
 
@@ -62,7 +61,7 @@ int main(int argc, char *argv[])
     strcpy(remote_port, MYPORT);
     remote_server = arguments.server_opt;
     domain = arguments.args[0];
-    qtype = qtype_str_to_int(arguments.args[1]);
+    int qtype = qtype_str_to_int(arguments.args[1]);
     uint8_t short_opt = arguments.short_opt;
     uint8_t bin_opt = arguments.bin_opt;
 
