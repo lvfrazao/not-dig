@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -O3 -Wall
+DEBUGFLAGS = -g -Wall
 TARGET = not-dig
 TARGET_PATH = ./src/stub_resolver/
 INSTALL_PATH = /usr/local/bin/
@@ -11,6 +12,8 @@ all: $(TARGET)
 $(TARGET): $(TARGET_PATH)$(TARGET).c
 	$(MAKE) $(TEST_TARGET)
 	$(CC) $(CFLAGS) $(TARGET_PATH)$(TARGET).c -o $(BUILD_PATH)$(TARGET)
+debug:
+	$(CC) $(DEBUGFLAGS) $(TARGET_PATH)$(TARGET).c -o $(BUILD_PATH)$(TARGET)
 install:
 	mv $(BUILD_PATH)$(TARGET) $(INSTALL_PATH)$(TARGET)
 clean:
