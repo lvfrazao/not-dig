@@ -781,11 +781,13 @@ uint16_t generate_random_id(void)
     #define page_size 4096
     static int cur_pos = 0;
     static uint16_t stream[page_size];
-    if (cur_pos == page_size) {
+    cur_pos = cur_pos % page_size;
+    if (cur_pos == 0) {
         FILE *urandom = fopen("/dev/urandom", "rb");
         if (urandom == NULL)
         {
             perror("Unable to open /dev/urandom: ");
+            fclose(urandom);
             last_result = ENTROPY_ERROR;
             return 0;
         }
@@ -793,11 +795,11 @@ uint16_t generate_random_id(void)
         if (bytes_read != page_size)
         {
             fprintf(stderr, "Unable to generate random ID\n");
+            fclose(urandom);
             last_result = ENTROPY_ERROR;
             return 0;
         }
         fclose(urandom);
-        cur_pos = 0;
     }
     last_result = NOERROR;
 
