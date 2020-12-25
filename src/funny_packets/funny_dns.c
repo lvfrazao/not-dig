@@ -24,7 +24,6 @@ Ideas:
 #include "../dns/dns.h"
 #include "../stub_resolver/format_answer.c"
 
-#define DEBUG 1
 #define LINEBRK "\n==========================================================================================================\n\n"
 #define RESP_BUF_SIZE 10000
 
@@ -230,12 +229,11 @@ int send_packet(uint8_t *packet, uint32_t packet_len, char *remote_port, char *r
     struct addrinfo hints, *res;
     int sockfd;
 
-    if (DEBUG)
-    {
-        char my_host[1000];
-        gethostname(my_host, sizeof my_host);
-        printf("Current server hostname: %s\n", my_host);
-    }
+    #ifdef DEBUG
+    char my_host[1000];
+    gethostname(my_host, sizeof my_host);
+    printf("Current server hostname: %s\n", my_host);
+    #endif
 
     // first, load up address structs with getaddrinfo():
 
@@ -275,18 +273,17 @@ int send_packet(uint8_t *packet, uint32_t packet_len, char *remote_port, char *r
     while (num_bytes == -1)
     {
         sendto(sockfd, packet, packet_len, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
-        if (DEBUG)
+        #ifdef DEBUG
+        printf("%s", LINEBRK);
+        printf("Sent message to %s:%s\n", remote_server, remote_port);
+        for (int i = 0; i < packet_len; i++)
         {
-            printf("%s", LINEBRK);
-            printf("Sent message to %s:%s\n", remote_server, remote_port);
-            for (int i = 0; i < packet_len; i++)
-            {
-                printf("%02X ", packet[i]);
-                if ((i + 1) % 2 == 0)
-                    printf("\n");
-            }
-            printf("%s", LINEBRK);
+            printf("%02X ", packet[i]);
+            if ((i + 1) % 2 == 0)
+                printf("\n");
         }
+        printf("%s", LINEBRK);
+        #endif
         num_bytes = recvfrom(sockfd, resp, RESP_BUF_SIZE, MSG_WAITALL, (struct sockaddr *)&servaddr, &from_len);
         if (num_bytes == -1)
         {
@@ -300,24 +297,23 @@ int send_packet(uint8_t *packet, uint32_t packet_len, char *remote_port, char *r
     }
 
     double end = get_wall_time();
-    if (DEBUG)
+    #ifdef DEBUG
+    printf("Received %d bytes from %s:%s\n", num_bytes, remote_server, remote_port);
+    if (num_bytes == -1)
     {
-        printf("Received %d bytes from %s:%s\n", num_bytes, remote_server, remote_port);
-        if (num_bytes == -1)
-        {
-            perror("Error receiving response");
-        }
-        else
-        {
-            for (int i = 0; i < num_bytes; i++)
-            {
-                printf("%02X ", resp[i]);
-                if ((i + 1) % 2 == 0)
-                    printf("\n");
-            }
-        }
-        printf("%s", LINEBRK);
+        perror("Error receiving response");
     }
+    else
+    {
+        for (int i = 0; i < num_bytes; i++)
+        {
+            printf("%02X ", resp[i]);
+            if ((i + 1) % 2 == 0)
+                printf("\n");
+        }
+    }
+    printf("%s", LINEBRK);
+    #endif
 
     close(sockfd);
 

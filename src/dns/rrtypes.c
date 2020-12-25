@@ -6,8 +6,6 @@
 #include "dns_packet.c"
 #include "dns_data.c"
 
-#define DEBUG 0
-
 uint32_t find_loc_in_packet(uint8_t *packet, uint8_t *data, uint16_t data_len);
 void print_packet(uint8_t *packet, uint32_t packet_len);
 char *base64_encode(uint8_t *data, uint32_t data_len);
@@ -141,15 +139,14 @@ char *CNAME_str(uint8_t *encoded_name, uint16_t data_len, uint8_t *packet)
 // 6
 char *SOA_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
 {
-    if (DEBUG)
+    #ifdef DEBUG
+    printf("SOA Bytes:\n");
+    for (int i = 0; i < data_len; i++)
     {
-        printf("SOA Bytes:\n");
-        for (int i = 0; i < data_len; i++)
-        {
-            printf("%02X ", data[i]);
-        }
-        printf("\n");
+        printf("%02X ", data[i]);
     }
+    printf("\n");
+    #endif
     /*
                                   1  1  1  1  1  1
     0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
@@ -213,19 +210,18 @@ char *SOA_str(uint8_t *data, uint16_t data_len, uint8_t *packet)
     //data[cur_loc] = 0;
 
     loc = find_loc_in_packet(packet, &data[prev_loc], data_len - arraylen(encoded_name));
-    if (DEBUG)
+    #ifdef DEBUG
+    printf("RNAME (len: %d / Packt loc: %d):\n", data_len - arraylen(encoded_name), loc);
+    int i = 0;
+    while (1)
     {
-        printf("RNAME (len: %d / Packt loc: %d):\n", data_len - arraylen(encoded_name), loc);
-        int i = 0;
-        while (1)
-        {
-            printf("%02X ", data[prev_loc + i]);
-            if (data[prev_loc + i] == 0 || is_compressed(data[prev_loc + i]))
-                break;
-            i++;
-        }
-        printf("\n");
+        printf("%02X ", data[prev_loc + i]);
+        if (data[prev_loc + i] == 0 || is_compressed(data[prev_loc + i]))
+            break;
+        i++;
     }
+    printf("\n");
+    #endif
     free(encoded_name);
     encoded_name = decompress_name(packet, &loc);
     rname = decode_domain_name(encoded_name);

@@ -8,7 +8,6 @@
 #include "../dns/dns.h"
 
 #define VERSION "0.0.1"
-#define DEBUG 0
 
 char *str_to_upper(char *str);
 char *qtype_to_str(uint16_t qtype_int);
@@ -18,8 +17,9 @@ char *rcode_to_str(uint8_t rcode_int);
 
 void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote_server, char *remote_port, char *datetime, uint32_t msg_size, uint8_t *packet, uint8_t short_ans, uint8_t bin)
 {
-    if (DEBUG)
-        print_packet(packet, msg_size);
+    #ifdef DEBUG
+    print_packet(packet, msg_size);
+    #endif
 
     if (short_ans || bin)
     {

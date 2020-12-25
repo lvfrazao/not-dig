@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -O3 -Wall
-DEBUGFLAGS = -g -Wall
+DEBUGFLAGS = -g -Wall -D DEBUG
 TARGET = not-dig
 TARGET_PATH = ./src/stub_resolver/
 INSTALL_PATH = /usr/local/bin/

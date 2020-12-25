@@ -23,7 +23,6 @@
 #define TRUE 1
 #define FALSE 0
 #define LINEBRK "\n==========================================================================================================\n\n"
-#define DEBUG 0
 
 struct response_packet {
     uint8_t *packet;
@@ -49,15 +48,13 @@ int main(int argc, char *argv[])
     arguments.output_file = "-";
 
     argp_parse(&argp, argc, argv, 0, 0, &arguments);
-    if (DEBUG)
-    {
-        printf("ARG1 = %s\nARG2 = %s\n", arguments.args[0], arguments.args[1]);
-        printf("SERVER = %s PORT = %s\n", arguments.server_opt, arguments.port_opt);
-        printf("OUTPUT_FILE = %s\n", arguments.output_file);
-        printf("SHORT = %s\n", arguments.short_opt ? "yes" : "no");
-        printf("BIN = %s\n", arguments.bin_opt ? "yes" : "no");
-    }
-
+    #ifdef DEBUG
+    printf("ARG1 = %s\nARG2 = %s\n", arguments.args[0], arguments.args[1]);
+    printf("SERVER = %s PORT = %s\n", arguments.server_opt, arguments.port_opt);
+    printf("OUTPUT_FILE = %s\n", arguments.output_file);
+    printf("SHORT = %s\n", arguments.short_opt ? "yes" : "no");
+    printf("BIN = %s\n", arguments.bin_opt ? "yes" : "no");
+    #endif
     strcpy(remote_port, MYPORT);
     remote_server = arguments.server_opt;
     domain = arguments.args[0];
@@ -104,12 +101,11 @@ struct response_packet *dns_query(char *remote_port, char *remote_server, char *
     struct addrinfo hints, *res;
     int sockfd;
 
-    if (DEBUG)
-    {
-        char my_host[1000];
-        gethostname(my_host, sizeof my_host);
-        printf("Current server hostname: %s\n", my_host);
-    }
+    #ifdef DEBUG
+    char my_host[1000];
+    gethostname(my_host, sizeof my_host);
+    printf("Current server hostname: %s\n", my_host);
+    #endif
 
     // first, load up address structs with getaddrinfo():
 
@@ -156,18 +152,12 @@ struct response_packet *dns_query(char *remote_port, char *remote_server, char *
     while (num_bytes == -1)
     {
         sendto(sockfd, packet, msg->__len__uncomp, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
-        if (DEBUG)
-        {
-            printf("%s", LINEBRK);
-            printf("Sent message to %s:%s\n", remote_server, remote_port);
-            for (int i = 0; i < msg->__len__uncomp; i++)
-            {
-                printf("%02X ", packet[i]);
-                if ((i + 1) % 2 == 0)
-                    printf("\n");
-            }
-            printf("%s", LINEBRK);
-        }
+        #ifdef DEBUG
+        printf("%s", LINEBRK);
+        printf("Sent message to %s:%s\n", remote_server, remote_port);
+        print_packet(packet, msg->__len__uncomp);
+        printf("%s", LINEBRK);
+        #endif
         num_bytes = recvfrom(sockfd, resp, RESP_BUF_SIZE, MSG_WAITALL, (struct sockaddr *)&servaddr, &from_len);
         if (num_bytes == -1)
         {
@@ -180,24 +170,18 @@ struct response_packet *dns_query(char *remote_port, char *remote_server, char *
         }
     }
 
-    if (DEBUG)
+    #ifdef DEBUG
+    printf("Received %d bytes from %s:%s\n", num_bytes, remote_server, remote_port);
+    if (num_bytes == -1)
     {
-        printf("Received %d bytes from %s:%s\n", num_bytes, remote_server, remote_port);
-        if (num_bytes == -1)
-        {
-            perror("Error receiving response: ");
-        }
-        else
-        {
-            for (int i = 0; i < num_bytes; i++)
-            {
-                printf("%02X ", resp[i]);
-                if ((i + 1) % 2 == 0)
-                    printf("\n");
-            }
-        }
-        printf("%s", LINEBRK);
+        perror("Error receiving response: ");
     }
+    else
+    {
+        print_packet(resp, num_bytes);
+    }
+    printf("%s", LINEBRK);
+    #endif
     struct response_packet *resp_query = malloc(sizeof(struct response_packet));
     resp_query->packet = malloc(sizeof(uint8_t) * num_bytes);
     memcpy(resp_query->packet, resp, sizeof(uint8_t) * num_bytes);
