@@ -49,9 +49,13 @@ void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote
     }
 
     printf("; <<>> Not DiG %s <<>> %s %s\n", VERSION, qname, qtype);
+    free(qname);
     printf(";; global options: +cmd\n");
     printf(";; Got answer:\n");
-    printf(";; ->> HEADER <<- opcode: %s status: %s id: %d\n", str_to_upper(opcode), str_to_upper(status), msg->head->ID);
+    char *upper_opcode = str_to_upper(opcode), *upper_status = str_to_upper(status); 
+    printf(";; ->> HEADER <<- opcode: %s status: %s id: %d\n", upper_opcode, upper_status, msg->head->ID);
+    free(upper_opcode);
+    free(upper_status);
     printf(";; flags:");
     // Flags
     if (msg->head->AA)
@@ -77,7 +81,9 @@ void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote
         printf(";; QUESTION SECTION:\n");
     for (int i = 0; i < msg->head->QDCount; i++)
     {
-        printf("%s\t\tIN\t\t%s\n", decode_domain_name((uint8_t *)msg->quest[i]->QNAME), qtype_to_str(msg->quest[i]->QTYPE));
+        char *decoded_domain = decode_domain_name((uint8_t *)msg->quest[i]->QNAME);
+        printf("%s\t\tIN\t\t%s\n", decoded_domain, qtype_to_str(msg->quest[i]->QTYPE));
+        free(decoded_domain);
     }
     printf("\n");
 
@@ -87,7 +93,10 @@ void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote
     {
         char *data;
         data = msg->ans[i]->rdata_to_str(msg->ans[i], packet);
-        printf("%s\t\t%d\t\tIN\t\t%s\t\t%s\n", decode_domain_name((uint8_t *)msg->ans[i]->NAME), msg->ans[i]->TTL, qtype_to_str(msg->ans[i]->RRTYPE), data);
+        char *decoded_domain = decode_domain_name((uint8_t *)msg->ans[i]->NAME);
+        printf("%s\t\t%d\t\tIN\t\t%s\t\t%s\n", decoded_domain, msg->ans[i]->TTL, qtype_to_str(msg->ans[i]->RRTYPE), data);
+        free(decoded_domain);
+        free(data);
     }
 
     if (msg->head->NSCOUNT)
@@ -145,8 +154,12 @@ int qtype_str_to_int(char *qtype_str)
     for (uint16_t i = 0; i < rrtypes_array_len; i++)
     {
         if (strcmp(qtype_str, RRTYPES_STR[i]) == 0)
+        {
+            free(qtype_str);
             return i;
+        }
     }
+    free(qtype_str);
     fprintf(stderr, "Unknown question type, defaulting to QTYPE 1 (A record)\n");
     return 1;
 }

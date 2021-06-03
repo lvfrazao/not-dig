@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
 
     pretty_print_response(ans_msg, (end - start) * 1000, remote_server, remote_port, datetime, resp_query->packet_size, resp_query->packet, short_opt, bin_opt);
 
+    ans_msg->__del__(ans_msg);
     free(resp_query->packet);
     free(resp_query);
     return 0;
@@ -118,6 +119,7 @@ struct response_packet *dns_query(char *remote_port, char *remote_server, char *
 
     // make a socket:
     sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    freeaddrinfo(res);
 
     // Set timeout for receiving data (dont want to block forever)
     struct timeval tv;
