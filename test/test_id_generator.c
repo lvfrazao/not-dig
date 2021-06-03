@@ -2,7 +2,7 @@
 
 #include "../src/dns/dns_packet.c"
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     uint16_t res = generate_random_id();
 

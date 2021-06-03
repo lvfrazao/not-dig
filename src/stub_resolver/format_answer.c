@@ -1,49 +1,53 @@
 #pragma once
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
 
 #include "../dns/dns.h"
 
 #define VERSION "0.0.1"
 
-char *str_to_upper(char *str);
-char *qtype_to_str(uint16_t qtype_int);
-int qtype_str_to_int(char *qtype_str);
-char *opcode_to_str(uint8_t opcode_int);
-char *rcode_to_str(uint8_t rcode_int);
+char* str_to_upper(char* str);
+char* qtype_to_str(uint16_t qtype_int);
+int qtype_str_to_int(char* qtype_str);
+char* opcode_to_str(uint8_t opcode_int);
+char* rcode_to_str(uint8_t rcode_int);
 
-void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote_server, char *remote_port, char *datetime, uint32_t msg_size, uint8_t *packet, uint8_t short_ans, uint8_t bin)
+void pretty_print_response(DNSMessage* msg,
+    double query_time_usec,
+    char* remote_server,
+    char* remote_port,
+    char* datetime,
+    uint32_t msg_size,
+    uint8_t* packet,
+    uint8_t short_ans,
+    uint8_t bin)
 {
-    #ifdef DEBUG
+#ifdef DEBUG
     print_packet(packet, msg_size);
-    #endif
+#endif
 
-    if (short_ans || bin)
-    {
-        for (int i = 0; i < msg->head->ANCOUNT; i++)
-        {
+    if (short_ans || bin) {
+        for (int i = 0; i < msg->head->ANCOUNT; i++) {
             if (bin)
-                fwrite(msg->ans[i]->RDATA, sizeof(uint8_t), msg->ans[i]->RDLENGTH, stdout);
+                fwrite(msg->ans[i]->RDATA, sizeof(uint8_t), msg->ans[i]->RDLENGTH,
+                    stdout);
             else
                 printf("%s\n", msg->ans[i]->rdata_to_str(msg->ans[i], packet));
         }
         exit(0);
     }
 
-    char *opcode = opcode_to_str(msg->head->opcode);
-    char *status = rcode_to_str(msg->head->RCODE);
-    char *qname;
-    char *qtype;
-    if (msg->head->QDCount)
-    {
-        qname = decode_domain_name((uint8_t *)msg->quest[0]->QNAME);
+    char* opcode = opcode_to_str(msg->head->opcode);
+    char* status = rcode_to_str(msg->head->RCODE);
+    char* qname;
+    char* qtype;
+    if (msg->head->QDCount) {
+        qname = decode_domain_name((uint8_t*)msg->quest[0]->QNAME);
         qtype = qtype_to_str(msg->quest[0]->QTYPE);
-    }
-    else
-    {
+    } else {
         qname = "N/A";
         qtype = "N/A";
     }
@@ -52,8 +56,10 @@ void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote
     free(qname);
     printf(";; global options: +cmd\n");
     printf(";; Got answer:\n");
-    char *upper_opcode = str_to_upper(opcode), *upper_status = str_to_upper(status); 
-    printf(";; ->> HEADER <<- opcode: %s status: %s id: %d\n", upper_opcode, upper_status, msg->head->ID);
+    char *upper_opcode = str_to_upper(opcode),
+         *upper_status = str_to_upper(status);
+    printf(";; ->> HEADER <<- opcode: %s status: %s id: %d\n", upper_opcode,
+        upper_status, msg->head->ID);
     free(upper_opcode);
     free(upper_status);
     printf(";; flags:");
@@ -73,48 +79,51 @@ void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote
     printf("; ");
 
     printf("QUERY: %d, ANSWER: %d, AUTHORITY: %d, ADDITIONAL: %d\n",
-           msg->head->QDCount, msg->head->ANCOUNT, msg->head->NSCOUNT, msg->head->ARCOUNT);
+        msg->head->QDCount, msg->head->ANCOUNT, msg->head->NSCOUNT,
+        msg->head->ARCOUNT);
 
     printf("\n");
 
     if (msg->head->QDCount)
         printf(";; QUESTION SECTION:\n");
-    for (int i = 0; i < msg->head->QDCount; i++)
-    {
-        char *decoded_domain = decode_domain_name((uint8_t *)msg->quest[i]->QNAME);
-        printf("%s\t\tIN\t\t%s\n", decoded_domain, qtype_to_str(msg->quest[i]->QTYPE));
+    for (int i = 0; i < msg->head->QDCount; i++) {
+        char* decoded_domain = decode_domain_name((uint8_t*)msg->quest[i]->QNAME);
+        printf("%s\t\tIN\t\t%s\n", decoded_domain,
+            qtype_to_str(msg->quest[i]->QTYPE));
         free(decoded_domain);
     }
     printf("\n");
 
     if (msg->head->ANCOUNT)
         printf(";; ANSWER SECTION:\n");
-    for (int i = 0; i < msg->head->ANCOUNT; i++)
-    {
-        char *data;
+    for (int i = 0; i < msg->head->ANCOUNT; i++) {
+        char* data;
         data = msg->ans[i]->rdata_to_str(msg->ans[i], packet);
-        char *decoded_domain = decode_domain_name((uint8_t *)msg->ans[i]->NAME);
-        printf("%s\t\t%d\t\tIN\t\t%s\t\t%s\n", decoded_domain, msg->ans[i]->TTL, qtype_to_str(msg->ans[i]->RRTYPE), data);
+        char* decoded_domain = decode_domain_name((uint8_t*)msg->ans[i]->NAME);
+        printf("%s\t\t%d\t\tIN\t\t%s\t\t%s\n", decoded_domain, msg->ans[i]->TTL,
+            qtype_to_str(msg->ans[i]->RRTYPE), data);
         free(decoded_domain);
         free(data);
     }
 
     if (msg->head->NSCOUNT)
         printf(";; AUTHORITY SECTION:\n");
-    for (int i = 0; i < msg->head->NSCOUNT; i++)
-    {
-        char *data;
+    for (int i = 0; i < msg->head->NSCOUNT; i++) {
+        char* data;
         data = msg->auth[i]->rdata_to_str(msg->auth[i], packet);
-        printf("%s\t\t%d\t\tIN\t\t%s\t\t%s\n", decode_domain_name((uint8_t *)msg->auth[i]->NAME), msg->auth[i]->TTL, qtype_to_str(msg->auth[i]->RRTYPE), data);
+        printf("%s\t\t%d\t\tIN\t\t%s\t\t%s\n",
+            decode_domain_name((uint8_t*)msg->auth[i]->NAME), msg->auth[i]->TTL,
+            qtype_to_str(msg->auth[i]->RRTYPE), data);
     }
 
     if (msg->head->ARCOUNT)
         printf(";; ADDITIONAL SECTION:\n");
-    for (int i = 0; i < msg->head->ARCOUNT; i++)
-    {
-        char *data;
+    for (int i = 0; i < msg->head->ARCOUNT; i++) {
+        char* data;
         data = msg->addl[i]->rdata_to_str(msg->addl[i], packet);
-        printf("%s\t\t%d\t\tIN\t\t%s\t\t%s\n", decode_domain_name((uint8_t *)msg->addl[i]->NAME), msg->addl[i]->TTL, qtype_to_str(msg->addl[i]->RRTYPE), data);
+        printf("%s\t\t%d\t\tIN\t\t%s\t\t%s\n",
+            decode_domain_name((uint8_t*)msg->addl[i]->NAME), msg->addl[i]->TTL,
+            qtype_to_str(msg->addl[i]->RRTYPE), data);
     }
 
     printf("\n;; Query time: %.0f msec\n", query_time_usec);
@@ -124,17 +133,16 @@ void pretty_print_response(DNSMessage *msg, double query_time_usec, char *remote
     printf("\n");
 }
 
-char *str_to_upper(char *str)
+char* str_to_upper(char* str)
 {
-    char *c = malloc(sizeof(char *) * strlen(str) + 1);
+    char* c = malloc(sizeof(char*) * strlen(str) + 1);
     if (c == NULL) {
         perror("Malloc failed!");
         exit(EXIT_FAILURE);
     }
 
     int i = 0;
-    while (str[i] != '\0')
-    {
+    while (str[i] != '\0') {
         c[i] = toupper(str[i]);
         i++;
     }
@@ -142,19 +150,17 @@ char *str_to_upper(char *str)
     return c;
 }
 
-char *qtype_to_str(uint16_t qtype_int)
+char* qtype_to_str(uint16_t qtype_int)
 {
     return RRTYPES_STR[qtype_int];
 }
 
-int qtype_str_to_int(char *qtype_str)
+int qtype_str_to_int(char* qtype_str)
 {
     qtype_str = str_to_upper(qtype_str);
     uint16_t rrtypes_array_len = 259;
-    for (uint16_t i = 0; i < rrtypes_array_len; i++)
-    {
-        if (strcmp(qtype_str, RRTYPES_STR[i]) == 0)
-        {
+    for (uint16_t i = 0; i < rrtypes_array_len; i++) {
+        if (strcmp(qtype_str, RRTYPES_STR[i]) == 0) {
             free(qtype_str);
             return i;
         }
@@ -164,12 +170,12 @@ int qtype_str_to_int(char *qtype_str)
     return 1;
 }
 
-char *opcode_to_str(uint8_t opcode_int)
+char* opcode_to_str(uint8_t opcode_int)
 {
     return OPCODES_STR[opcode_int];
 }
 
-char *rcode_to_str(uint8_t rcode_int)
+char* rcode_to_str(uint8_t rcode_int)
 {
     return RCODES_STR[rcode_int];
 }

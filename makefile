@@ -27,6 +27,10 @@ clean:
 	$(RM) $(TARGET)
 	$(RM) $(TEST_TARGET)
 
+.PHONY: format
+format:
+	find . -iname *.c | xargs -I% clang-format -i --style=Webkit %
+
 test: $(TEST_TARGET)
 
 $(TEST_TARGET): $(TEST_PATH)

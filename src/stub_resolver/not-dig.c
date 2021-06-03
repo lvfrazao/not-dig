@@ -1,42 +1,48 @@
 //#pragma once
 
+#include <arpa/inet.h>
+#include <ctype.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/time.h>
 #include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <unistd.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
-#include "argparse.c" 
 #include "../dns/dns.h"
+#include "argparse.c"
 #include "format_answer.c"
 
 #define DEF_PORT "53" // the port users will be connecting to
 #define DEF_SERVER "8.8.8.8"
-#define RESP_BUF_SIZE 1000000 // Source of issues, segault if response large than this
+#define RESP_BUF_SIZE \
+    1000000 // Source of issues, segault if response large than this
 #define TRUE 1
 #define FALSE 0
-#define LINEBRK "\n==========================================================================================================\n\n"
+#define LINEBRK                                                                  \
+    "\n========================================================================" \
+    "==================================\n\n"
 
 struct response_packet {
-    uint8_t *packet;
+    uint8_t* packet;
     uint32_t packet_size;
 };
 
 double get_wall_time(void);
-struct response_packet *dns_query(char *remote_port, char *remote_server, char *domain, int qtype);
+struct response_packet* dns_query(char* remote_port,
+    char* remote_server,
+    char* domain,
+    int qtype);
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     char remote_port[6];
-    char *remote_server; // 255.255.255.255\0
-    char *domain;
+    char* remote_server; // 255.255.255.255\0
+    char* domain;
 
     struct arguments arguments;
 
@@ -48,13 +54,13 @@ int main(int argc, char *argv[])
     arguments.output_file = "-";
 
     argp_parse(&argp, argc, argv, 0, 0, &arguments);
-    #ifdef DEBUG
+#ifdef DEBUG
     printf("ARG1 = %s\nARG2 = %s\n", arguments.args[0], arguments.args[1]);
     printf("SERVER = %s PORT = %s\n", arguments.server_opt, arguments.port_opt);
     printf("OUTPUT_FILE = %s\n", arguments.output_file);
     printf("SHORT = %s\n", arguments.short_opt ? "yes" : "no");
     printf("BIN = %s\n", arguments.bin_opt ? "yes" : "no");
-    #endif
+#endif
     strcpy(remote_port, arguments.port_opt);
     remote_server = arguments.server_opt;
     domain = arguments.args[0];
@@ -62,21 +68,21 @@ int main(int argc, char *argv[])
     uint8_t short_opt = arguments.short_opt;
     uint8_t bin_opt = arguments.bin_opt;
 
-
     double start = get_wall_time();
-    struct response_packet *resp_query = dns_query(remote_port, remote_server, domain, qtype);
+    struct response_packet* resp_query = dns_query(remote_port, remote_server, domain, qtype);
     double end = get_wall_time();
-    DNSMessage *ans_msg = packet_to_message(resp_query->packet);
-
+    DNSMessage* ans_msg = packet_to_message(resp_query->packet);
 
     // Generate datetime
     char datetime[40];
     time_t t = time(NULL);
-    struct tm *tm = localtime(&t);
+    struct tm* tm = localtime(&t);
     // Date time format: "Sat May 25 00:51:17 DST 2019"
     strftime(datetime, sizeof(datetime), "%a %b %d %X %Z %Y", tm);
 
-    pretty_print_response(ans_msg, (end - start) * 1000, remote_server, remote_port, datetime, resp_query->packet_size, resp_query->packet, short_opt, bin_opt);
+    pretty_print_response(ans_msg, (end - start) * 1000, remote_server,
+        remote_port, datetime, resp_query->packet_size,
+        resp_query->packet, short_opt, bin_opt);
 
     ans_msg->__del__(ans_msg);
     free(resp_query->packet);
@@ -85,28 +91,31 @@ int main(int argc, char *argv[])
 }
 
 // Helper funcs
-// From https://stackoverflow.com/questions/17432502/how-can-i-measure-cpu-time-and-wall-clock-time-on-both-linux-windows
+// From
+// https://stackoverflow.com/questions/17432502/how-can-i-measure-cpu-time-and-wall-clock-time-on-both-linux-windows
 double get_wall_time()
 {
     struct timeval time;
-    if (gettimeofday(&time, NULL))
-    {
+    if (gettimeofday(&time, NULL)) {
         //  Handle error
         return 0;
     }
     return (double)time.tv_sec + (double)time.tv_usec * .000001;
 }
 
-struct response_packet *dns_query(char *remote_port, char *remote_server, char *domain, int qtype)
+struct response_packet* dns_query(char* remote_port,
+    char* remote_server,
+    char* domain,
+    int qtype)
 {
     struct addrinfo hints, *res;
     int sockfd;
 
-    #ifdef DEBUG
+#ifdef DEBUG
     char my_host[1000];
     gethostname(my_host, sizeof my_host);
     printf("Current server hostname: %s\n", my_host);
-    #endif
+#endif
 
     // first, load up address structs with getaddrinfo():
 
@@ -125,8 +134,7 @@ struct response_packet *dns_query(char *remote_port, char *remote_server, char *
     struct timeval tv;
     tv.tv_sec = 1;
     tv.tv_usec = 0;
-    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
-    {
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
         perror("Error");
     }
 
@@ -139,52 +147,48 @@ struct response_packet *dns_query(char *remote_port, char *remote_server, char *
     servaddr.sin_addr.s_addr = inet_addr(remote_server);
 
     // Generate message to send
-    DNSMessage *msg = make_query_message(domain, qtype, 1);
-    if (msg == NULL)
-    {
+    DNSMessage* msg = make_query_message(domain, qtype, 1);
+    if (msg == NULL) {
         exit(EXIT_FAILURE);
     }
-    uint8_t *packet = msg->to_wire_uncompressed(msg);
+    uint8_t* packet = msg->to_wire_uncompressed(msg);
 
     // Receive response from server
     unsigned int from_len;
     int num_bytes = -1, failures = 0;
     uint8_t resp[RESP_BUF_SIZE];
 
-    while (num_bytes == -1)
-    {
-        sendto(sockfd, packet, msg->__len__uncomp, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
-        #ifdef DEBUG
+    while (num_bytes == -1) {
+        sendto(sockfd, packet, msg->__len__uncomp, 0, (struct sockaddr*)&servaddr,
+            sizeof(servaddr));
+#ifdef DEBUG
         printf("%s", LINEBRK);
         printf("Sent message to %s:%s\n", remote_server, remote_port);
         print_packet(packet, msg->__len__uncomp);
         printf("%s", LINEBRK);
-        #endif
-        num_bytes = recvfrom(sockfd, resp, RESP_BUF_SIZE, MSG_WAITALL, (struct sockaddr *)&servaddr, &from_len);
-        if (num_bytes == -1)
-        {
+#endif
+        num_bytes = recvfrom(sockfd, resp, RESP_BUF_SIZE, MSG_WAITALL,
+            (struct sockaddr*)&servaddr, &from_len);
+        if (num_bytes == -1) {
             failures++;
         }
-        if (failures > 3)
-        {
+        if (failures > 3) {
             fprintf(stderr, "Socket timed out waiting for response\n");
             exit(EXIT_FAILURE);
         }
     }
 
-    #ifdef DEBUG
-    printf("Received %d bytes from %s:%s\n", num_bytes, remote_server, remote_port);
-    if (num_bytes == -1)
-    {
+#ifdef DEBUG
+    printf("Received %d bytes from %s:%s\n", num_bytes, remote_server,
+        remote_port);
+    if (num_bytes == -1) {
         perror("Error receiving response: ");
-    }
-    else
-    {
+    } else {
         print_packet(resp, num_bytes);
     }
     printf("%s", LINEBRK);
-    #endif
-    struct response_packet *resp_query = malloc(sizeof(struct response_packet));
+#endif
+    struct response_packet* resp_query = malloc(sizeof(struct response_packet));
     resp_query->packet = malloc(sizeof(uint8_t) * num_bytes);
     memcpy(resp_query->packet, resp, sizeof(uint8_t) * num_bytes);
     resp_query->packet_size = num_bytes;

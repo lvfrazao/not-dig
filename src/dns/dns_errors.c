@@ -1,6 +1,5 @@
 #pragma once
-enum DNSERRORS
-{
+enum DNSERRORS {
     NOERROR,
     INVALID_DOMAIN,
     ENTROPY_ERROR,
