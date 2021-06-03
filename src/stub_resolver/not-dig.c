@@ -17,7 +17,7 @@
 #include "../dns/dns.h"
 #include "format_answer.c"
 
-#define MYPORT "53" // the port users will be connecting to
+#define DEF_PORT "53" // the port users will be connecting to
 #define DEF_SERVER "8.8.8.8"
 #define RESP_BUF_SIZE 1000000 // Source of issues, segault if response large than this
 #define TRUE 1
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     /* Default values. */
     arguments.short_opt = 0;
     arguments.bin_opt = 0;
-    arguments.port_opt = MYPORT;
+    arguments.port_opt = DEF_PORT;
     arguments.server_opt = DEF_SERVER;
     arguments.output_file = "-";
 
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     printf("SHORT = %s\n", arguments.short_opt ? "yes" : "no");
     printf("BIN = %s\n", arguments.bin_opt ? "yes" : "no");
     #endif
-    strcpy(remote_port, MYPORT);
+    strcpy(remote_port, arguments.port_opt);
     remote_server = arguments.server_opt;
     domain = arguments.args[0];
     int qtype = qtype_str_to_int(arguments.args[1]);

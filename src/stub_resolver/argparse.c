@@ -14,8 +14,8 @@ static char args_doc[] = "QNAME QTYPE";
 static struct argp_option options[] = {
     {"short", 's', 0, 0, "Only print answer rdata"},
     {"bin", 'b', 0, 0, "Output rdata in wire format"},
-    {"port", 'p', 0, 0, "Port to send DNS query to"},
-    {"server", '@', "STR", 0, "Server to send DNS query to"},
+    {"port", 'p', "PORT", 0, "Port to send DNS query to"},
+    {"server", '@', "SERVER", 0, "Server to send DNS query to"},
     {"output", 'o', "FILE", 0,
      "Output to FILE instead of standard output"},
     {0}};
@@ -35,6 +35,9 @@ parse_opt(int key, char *arg, struct argp_state *state)
     /* Get the input argument from argp_parse, which we
      know is a pointer to our arguments structure. */
     struct arguments *arguments = state->input;
+    #ifdef DEBUG
+    printf("Key = %d, *arg = %p (%s)\n", key, arg, arg);
+    #endif
 
     switch (key)
     {
@@ -45,7 +48,7 @@ parse_opt(int key, char *arg, struct argp_state *state)
         arguments->bin_opt = 1;
         break;
     case 'p':
-        if (isint(arg) && atoi(arg) <= 65535)
+        if (arg != NULL && isint(arg) && atoi(arg) <= 65535 && atoi(arg) > 0)
         arguments->port_opt = arg;
         else
         {
